@@ -1,11 +1,13 @@
 # TODO: must port to NET::Http soonlike!
 require 'yaml'
+require "net/https"
 
 class RestAPI
     attr_accessor :server, :certname
 
-    def initialize(dbg = false)
+    def initialize(dbg = false, usecurl=false)
         @debug = dbg
+        @curl = usecurl
         @configdir = File.expand_path('~/.restapi')
 
         begin
@@ -17,8 +19,69 @@ class RestAPI
         end
     end
 
-    #def command(action, argument='', method='GET', type='yaml', output=false, file=false, data=false)
     def command( opts={} )
+        if @curl
+            curl(opts)
+        else
+            uri = "/production/#{opts[:action]}/#{opts[:argument]}"
+
+            http = Net::HTTP.new(@server, 8140)
+            http.use_ssl = true
+
+            unless opts[:noauth]
+                http.verify_mode = OpenSSL::SSL::VERIFY_PEER
+
+                store = OpenSSL::X509::Store.new
+                store.add_cert(OpenSSL::X509::Certificate.new(File.read("#{@configdir}/ca_crt.pem")))
+                http.cert_store = store
+
+                http.key = OpenSSL::PKey::RSA.new(File.read("#{@configdir}/#{@certname}.key"))
+                http.cert = OpenSSL::X509::Certificate.new(File.read("#{@configdir}/#{@certname}.pem"))
+            end
+
+            case opts[:method]
+                when 'PUT'
+                    request = Net::HTTP::Put.new(uri)
+                    request["Content-Type"] = "text/#{opts[:type]}"
+
+                    if opts[:file]
+                        # set the body to the binary contents of :file
+                        file = File.open(opts[:file], 'rb')
+                        request.body = file.read
+                    else
+                        # set the body to the string value of :data
+                        request.body = opts[:data]
+                    end
+
+                when 'DELETE'
+                    request = Net::HTTP::Delete.new(uri)
+                when 'HEAD'
+                    request = Net::HTTP::Head.new(uri)
+                else
+                    # default to a GET request
+                    request = Net::HTTP::Get.new(uri)
+            end
+
+            request["Accept"] = opts[:type] || 'yaml'
+
+            if @debug
+                puts request.to_yaml
+            else
+                response = http.request(request)
+
+                if opts[:output]
+                    file = File.new(opts[:output], 'w')
+                    file.syswrite(response.body)
+                    file.close
+                else
+                    puts response.body
+                end
+            end
+        end
+    end
+
+    #def command(action, argument='', method='GET', type='yaml', output=false, file=false, data=false)
+    def curl( opts={} )
         opts[:method] ||= 'GET'
         opts[:type] ||= 'yaml'
 

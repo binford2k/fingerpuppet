@@ -30,7 +30,7 @@ optparse = OptionParser.new { |opts|
 "
  
     options[:show]=false
-    opts.on("-d", "--debug", "runs in debug mode") do |debug|
+    opts.on("-d", "--debug", "runs in debug mode") do
         options[:debug] = true
         #restAPI.debug
     end
@@ -39,6 +39,12 @@ optparse = OptionParser.new { |opts|
         puts opts
         exit
     end
+
+    opts.on("-c", "--curl", "Use commandline curl rather than Net::HTTP.") do
+        options[:curl] = true
+    end
+
+    opts.separator('')
 
     opts.on("--server SERVER", "The server address of your Puppetmaster.") do |server|
         options[:server] = server
@@ -150,7 +156,7 @@ optparse = OptionParser.new { |opts|
 begin
     optparse.parse!
 
-    restAPI = RestAPI.new(options[:debug])
+    restAPI = RestAPI.new(options[:debug], options[:curl])
     # if certname isn't specified, let's default to our certname, except for init
     if options[:action] != 'init'
         options[:certname] ||= restAPI.certname
