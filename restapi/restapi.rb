@@ -1,4 +1,3 @@
-# TODO: must port to NET::Http soonlike!
 require 'yaml'
 require "net/https"
 
