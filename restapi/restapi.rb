@@ -4,9 +4,11 @@ require "net/https"
 class RestAPI
     attr_accessor :server, :certname
 
-    def initialize(dbg = false, usecurl=false)
-        @debug = dbg
-        @curl = usecurl
+    def initialize( options={} )
+        @debug = options[:debug]
+        @curl = options[:curl]
+        @nop = options[:nop]
+        @output = options[:output]
         @configdir = File.expand_path('~/.restapi')
 
         begin
@@ -18,70 +20,88 @@ class RestAPI
         end
     end
 
+    # a helper that allows one to use either commandline curl or Net::HTTP
+    # this is useful mostly with -dcn to just print out the curl commandline
+    # you would use to accomplish what you're trying to do
     def command( opts={} )
+        # this allows a global @output var, but to also override that per call
+        opts[:output] ||= @output
+
         if @curl
             curl(opts)
         else
-            uri = "/production/#{opts[:action]}/#{opts[:argument]}"
+            data = rest(opts)
 
-            http = Net::HTTP.new(@server, 8140)
-            http.use_ssl = true
-
-            unless opts[:noauth]
-                http.verify_mode = OpenSSL::SSL::VERIFY_PEER
-
-                store = OpenSSL::X509::Store.new
-                store.add_cert(OpenSSL::X509::Certificate.new(File.read("#{@configdir}/ca_crt.pem")))
-                http.cert_store = store
-
-                http.key = OpenSSL::PKey::RSA.new(File.read("#{@configdir}/#{@certname}.key"))
-                http.cert = OpenSSL::X509::Certificate.new(File.read("#{@configdir}/#{@certname}.pem"))
-            end
-
-            case opts[:method]
-                when 'PUT'
-                    request = Net::HTTP::Put.new(uri)
-                    request["Content-Type"] = "text/#{opts[:type]}"
-
-                    if opts[:file]
-                        # set the body to the binary contents of :file
-                        file = File.open(opts[:file], 'rb')
-                        request.body = file.read
-                    else
-                        # set the body to the string value of :data
-                        request.body = opts[:data]
-                    end
-
-                when 'DELETE'
-                    request = Net::HTTP::Delete.new(uri)
-                when 'HEAD'
-                    request = Net::HTTP::Head.new(uri)
-                else
-                    # default to a GET request
-                    request = Net::HTTP::Get.new(uri)
-            end
-
-            request["Accept"] = opts[:type] || 'yaml'
-
-            if @debug
-                puts request.to_yaml
+            if opts[:output]
+                save(opts[:output], data)
             else
-                response = http.request(request)
-
-                if opts[:output]
-                    file = File.new(opts[:output], 'w')
-                    file.syswrite(response.body)
-                    file.close
-                else
-                    puts response.body
-                end
+                # When using the API, you will probably want to consume this data rather than just printing it.
+                # You might use YAML::load(data) or JSON::parse(data) depending on what's being returned
+                puts data
             end
         end
     end
 
+    def save(path, data)
+        file = File.new(path, 'w')
+        file.syswrite(data)
+        file.close
+    end
+
+    def rest( opts={} )
+        opts[:type] ||= 'yaml'
+        uri = "/production/#{opts[:action]}/#{opts[:argument]}"
+
+        http = Net::HTTP.new(@server, 8140)
+        http.use_ssl = true
+
+        unless opts[:noauth]
+            http.verify_mode = OpenSSL::SSL::VERIFY_PEER
+
+            store = OpenSSL::X509::Store.new
+            store.add_cert(OpenSSL::X509::Certificate.new(File.read("#{@configdir}/ca_crt.pem")))
+            http.cert_store = store
+
+            http.key = OpenSSL::PKey::RSA.new(File.read("#{@configdir}/#{@certname}.key"))
+            http.cert = OpenSSL::X509::Certificate.new(File.read("#{@configdir}/#{@certname}.pem"))
+        end
+
+        case opts[:method]
+            when 'PUT'
+                request = Net::HTTP::Put.new(uri)
+                request["Content-Type"] = "text/#{opts[:type]}"
+
+                if opts[:file]
+                    # set the body to the binary contents of :file
+                    file = File.open(opts[:file], 'rb')
+                    request.body = file.read
+                else
+                    # set the body to the string value of :data
+                    request.body = opts[:data]
+                end
+
+            when 'DELETE'
+                request = Net::HTTP::Delete.new(uri)
+            when 'HEAD'
+                request = Net::HTTP::Head.new(uri)
+            else
+                # default to a GET request
+                request = Net::HTTP::Get.new(uri)
+        end
+
+        request["Accept"] = opts[:type]
+
+        if @debug
+            puts '------ HTTP Request ------'
+            puts request.to_yaml
+            puts '--------------------------'
+        end
+
+        return @nop ? '' : http.request(request).body
+    end
+
     #def command(action, argument='', method='GET', type='yaml', output=false, file=false, data=false)
     def curl( opts={} )
-        opts[:method] ||= 'GET'
         opts[:type] ||= 'yaml'
 
         if opts[:noauth]
@@ -94,8 +114,6 @@ class RestAPI
         header = "-H 'Accept: #{opts[:type]}'"
         
         case opts[:method]
-            when 'GET'
-                methodstr = ''
             when 'PUT'
                 methodstr = '-X PUT'
                 header = "-H 'Content-Type: text/#{opts[:type]}'"
@@ -112,6 +130,9 @@ class RestAPI
                 methodstr = '-X DELETE'
             when 'HEAD'
                 methodstr = '-I'
+            else
+                # default to a GET request
+                methodstr = ''
         end
 
         uri = "https://#{@server}:8140/production/#{opts[:action]}/#{opts[:argument]}"
@@ -228,11 +249,10 @@ class RestAPI
                         :type => 'yaml' } )
     end
 
-    def getfile(path, filename=nil)
+    def getfile(path)
         self.command( { :action => 'file_content',
                         :argument => path,
-                        :type => 'raw',
-                        :output => filename } )
+                        :type => 'raw' } )
     end
 
     def delete(node)
@@ -287,11 +307,18 @@ class RestAPI
                         :argument => resource } )
     end
 
-    def report(node, file)
-        self.command( { :action => 'report', 
-                        :argument => node, 
-                        :method => 'PUT', 
-                        :file => file } )
+    def report(node, file, data=nil)
+        if data
+            self.command( { :action => 'report', 
+                            :argument => node, 
+                            :method => 'PUT', 
+                            :data => data } )
+        else
+            self.command( { :action => 'report', 
+                            :argument => node, 
+                            :method => 'PUT', 
+                            :file => file } )
+        end
     end
 
     def debug

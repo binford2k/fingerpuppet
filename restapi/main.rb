@@ -25,7 +25,9 @@ optparse = OptionParser.new { |opts|
         Your Puppetmaster must be configured to allow requests other than certificate requests.
         See http://docs.puppetlabs.com/guides/rest_auth_conf.html for more information.
 
-        The certname can be specified with --certname or with optional CERTNAME argument to many options. 
+        The certname can be specified with --certname or with optional CERTNAME argument to many options.
+
+        You may want to use the '-dcn' options to print the cURL equivalent command.
 
 "
  
@@ -44,6 +46,11 @@ optparse = OptionParser.new { |opts|
         options[:curl] = true
     end
 
+    opts.on("-n", "--nop", "No-Op mode. Don't perform action, just output debugging data. Implies --debug.") do
+        options[:nop] = true
+        options[:debug] = true
+    end
+
     opts.separator('')
 
     opts.on("--server SERVER", "The server address of your Puppetmaster.") do |server|
@@ -54,8 +61,12 @@ optparse = OptionParser.new { |opts|
         options[:certname] = certname
     end
 
-    opts.on("--file FILENAME", "The filename for use by other options.") do |filename|
+    opts.on("--file FILENAME", "The file to send to the Puppetmaster.") do |filename|
         options[:filename] = filename
+    end
+
+    opts.on("--output FILENAME", "The file to save any output to.") do |filename|
+        options[:output] = filename
     end
 
     opts.on("--state STATE", "The desired state you want to set.") do |state|
@@ -110,7 +121,7 @@ optparse = OptionParser.new { |opts|
         options[:certname] ||= certname
     end
 
-    opts.on("--cert_status [CERTNAME]", "Retrieve the certificate status for a given certname. Set the status by using --status.") do |certname|
+    opts.on("--cert_status [CERTNAME]", "Retrieve the certificate status for a given certname. Set the status by using --state.") do |certname|
         options[:action] = 'certificate_status'
         options[:certname] ||= certname
     end
@@ -143,7 +154,7 @@ optparse = OptionParser.new { |opts|
         options[:argument] = resource
     end
 
-    opts.on("--report [CERTNAME]", "Sends a YAML report to the Puppetmaster. Requires --file.") do |certname|
+    opts.on("--report [CERTNAME]", "Sends a YAML report to the Puppetmaster. Requires --file or --state.") do |certname|
         options[:action] = 'report'
         options[:certname] ||= certname
     end
@@ -156,7 +167,7 @@ optparse = OptionParser.new { |opts|
 begin
     optparse.parse!
 
-    restAPI = RestAPI.new(options[:debug], options[:curl])
+    restAPI = RestAPI.new( options )
     # if certname isn't specified, let's default to our certname, except for init
     if options[:action] != 'init'
         options[:certname] ||= restAPI.certname
@@ -184,7 +195,7 @@ begin
         when 'file_metadata'
             restAPI.file_metadata(options[:argument])           
         when 'getfile'
-            restAPI.getfile(options[:argument], options[:filename])
+            restAPI.getfile(options[:argument])
         when 'certificate'
             restAPI.certificate(options[:certname])
         when 'sign'
@@ -196,7 +207,7 @@ begin
         when 'resource'
             restAPI.resource(options[:argument])
         when 'report'
-            restAPI.report(options[:certname], options[:filename])
+            restAPI.report(options[:certname], options[:filename], options[:state])
         else
             puts 'Use -h/--help for usage documentation.'
     end     
