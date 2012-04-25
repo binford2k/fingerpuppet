@@ -1,4 +1,4 @@
-Usage : restapi.rb <commandstring>
+Usage : main.rb <commandstring>
 
         Steps for using the API:
             1:) restapi.rb --init --certname my.cert.name --server my.server.name
