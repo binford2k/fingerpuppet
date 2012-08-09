@@ -75,20 +75,12 @@ on setReminder(theSubject, theUrl)
 		set theDate to date (item 1 of theDate)
 	end if
 	
-	--get the short description
-	set working to my explode("(", theSubject)
-	set theShort to item 1 of working
-	try
-		set theShort to text 2 thru 15 of theShort & "… "
-	end try
-	
 	set theReservationDate to theDate - (14 * days)
 	set theReportsDate to theDate + (2 * days)
 	
 	tell application "Reminders"
 		make new list with properties {name:theSubject}
 		tell list theSubject
-			--make new reminder with properties {name:theSubject, body:theUrl, due date:theDate}
 			make new reminder with properties {name:"Plane Tickets", due date:theReservationDate, remind me date:theReservationDate}
 			make new reminder with properties {name:"Car Rental", due date:theReservationDate, remind me date:theReservationDate}
 			make new reminder with properties {name:"Hotel Reservation", due date:theReservationDate, remind me date:theReservationDate}
