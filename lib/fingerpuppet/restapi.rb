@@ -275,7 +275,6 @@ module Fingerpuppet
                           :argument => node,
                           :method => 'PUT',
                           :type => 'pson',
-                          :noauth => true,
                           :data => "{\"desired_state\":\"signed\"}" } )
       end
 
