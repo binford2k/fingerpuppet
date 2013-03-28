@@ -15,7 +15,7 @@ optparse = OptionParser.new { |opts|
 
             2:) On puppetmaster: puppet cert sign my.cert.name
 
-            3:) restapi.rb --install
+            3:) fingerpuppet --install
                     Downloads the signed certificate and installs it
 
             4:) ...
@@ -30,7 +30,7 @@ optparse = OptionParser.new { |opts|
         You may want to use the '-dcn' options to print the cURL equivalent command.
 
 "
- 
+
     options[:show]=false
     opts.on("-d", "--debug", "runs in debug mode") do
         options[:debug] = true
@@ -193,7 +193,7 @@ begin
         when 'delete'
             restAPI.delete(options[:certname])
         when 'file_metadata'
-            restAPI.file_metadata(options[:argument])           
+            restAPI.file_metadata(options[:argument])
         when 'getfile'
             restAPI.getfile(options[:argument])
         when 'certificate'
@@ -210,7 +210,8 @@ begin
             restAPI.report(options[:certname], options[:filename], options[:state])
         else
             puts 'Use -h/--help for usage documentation.'
-    end     
+    end
 rescue Exception => e
     puts e
 end
+
