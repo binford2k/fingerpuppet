@@ -1,14 +1,14 @@
 #!/usr/bin/env ruby
 
 require 'optparse'
-require 'restapi.rb'
+require 'fingerpuppet/restapi.rb'
 
 options = {}
 optparse = OptionParser.new { |opts|
     opts.banner = "Usage : restapi.rb <commandstring>
 
         Steps for using the API:
-            1:) restapi.rb --init --certname my.cert.name --server my.server.name
+            1:) fingerpuppet --init --certname my.cert.name --server my.server.name
                     Builds the config file
                     Generates the certificate and CSR
                     Submits the CSR to the Puppetmaster
@@ -167,7 +167,7 @@ optparse = OptionParser.new { |opts|
 begin
     optparse.parse!
 
-    restAPI = RestAPI.new( options )
+    restAPI = Fingerpuppet::RestAPI.new( options )
     # if certname isn't specified, let's default to our certname, except for init
     if options[:action] != 'init'
         options[:certname] ||= restAPI.certname

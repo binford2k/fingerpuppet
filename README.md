@@ -1,7 +1,7 @@
-Usage : main.rb <commandstring>
+Usage : fingerpuppet <commandstring>
 
         Steps for using the API:
-            1:) restapi.rb --init --certname my.cert.name --server my.server.name
+            1:) fingerpuppet --init --certname my.cert.name --server my.server.name
                     Builds the config file
                     Generates the certificate and CSR
                     Submits the CSR to the Puppetmaster
