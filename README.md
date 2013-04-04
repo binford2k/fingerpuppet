@@ -1,26 +1,53 @@
-Usage : fingerpuppet <commandstring>
+Introduction
+============
 
-        Steps for using the API:
-            1:) fingerpuppet --init --certname my.cert.name --server my.server.name
-                    Builds the config file
-                    Generates the certificate and CSR
-                    Submits the CSR to the Puppetmaster
+`fingerpuppet` is a simple library and commandline tool to interact with Puppet's REST API
+without needing to have Puppet itself installed. This may be integrated, for example,
+into a provisioning tool to allow your provisioning process to remotely sign certificates
+of newly built systems. Alternatively, you could use it to request known facts about
+a node from your Puppet Master, or even to request a catalog for a node to, for example,
+perform acceptance testing against a new version of Puppet before upgrading your
+production master.
 
-            2:) On puppetmaster: puppet cert sign my.cert.name
+Limitations
+============
 
-            3:) restapi.rb --install
-                    Downloads the signed certificate and installs it
+This is still in early development. Features may not work completely as advertised, and will
+certainly be less polished than an established product. Pull requests are welcome!
 
-            4:) ...
 
-            5:) Profit!
+Usage
+============
 
-        Your Puppetmaster must be configured to allow requests other than certificate requests.
-        See http://docs.puppetlabs.com/guides/rest_auth_conf.html for more information.
+`fingerpuppet [commandstring]`
 
-        The certname can be specified with --certname or with optional CERTNAME argument to many options.
+Steps for using the API with fingerpuppet:
 
-        You may want to use the '-dcn' options to print the cURL equivalent command.
+1. `fingerpuppet --init --certname my.cert.name --server my.server.name`
+    * Builds the config file
+    * Generates the certificate and CSR
+    * Submits the CSR to the Puppetmaster
+2. On puppetmaster: `puppet cert sign my.cert.name`
+3. `fingerpuppet --install`
+    * Downloads the signed certificate and installs it
+4. ...
+5. Profit!
+
+Your Puppetmaster must be configured to allow requests other than certificate requests.
+See [http://docs.puppetlabs.com/guides/rest_auth_conf.html](http://docs.puppetlabs.com/guides/rest_auth_conf.html) for more information.
+
+For example, you could add the stanza below as one of the first rules in `auth.conf` to
+allow a single authenticated provisioning system complete access to all endpoints.
+
+    # Allow the provisioner unfettered access to any endpoint
+    path /
+    auth yes
+    allow provision.mycompany.com
+
+
+The certname can be specified with `--certname` or with optional `CERTNAME` argument to many options.
+
+You may want to use the `-dcn` options to print the cURL equivalent command.
 
     -d, --debug                      runs in debug mode
     -h, --help                       Displays this help
@@ -46,7 +73,7 @@ Usage : fingerpuppet <commandstring>
         --certificate [CERTNAME]     Retrieve the certificate for a given certname or 'ca'.
         --cert_status [CERTNAME]     Retrieve the certificate status for a given certname. Set the status by using --state.
         --cert_revocation_list       Retrieve and display the certifiacte revocation list from the master.
-        --sign [CERTNAME]            Instruct the Puppetmaster to sign a certificate. Requires significate privileges in auth.conf.
+        --sign [CERTNAME]            Instruct the Puppetmaster to sign a certificate. Requires significant privileges in auth.conf.
 
         --file_metadata PATH         Retrieve the metadata for a file.
         --getfile PATH               Download a file from the Puppetmaster. Save to --file or output on stdout.
@@ -54,3 +81,35 @@ Usage : fingerpuppet <commandstring>
         --resource RESOURCE          Returns a list of resources (e.g. user) or information about a resource (e.g. 'user/elvis')
         --report [CERTNAME]          Sends a YAML report to the Puppetmaster. Requires --file or --state.
         --status                     Check to make sure the Puppetmaster is alive and well.
+
+Contact
+=======
+
+* Author: Ben Ford
+* Email: ben.ford@puppetlabs.com
+* Twitter: @binford2k
+* IRC (Freenode): binford2k
+
+License
+=======
+
+Copyright (c) 2012 Puppet Labs, info@puppetlabs.com
+
+Permission is hereby granted, free of charge, to any person obtaining
+a copy of this software and associated documentation files (the
+"Software"), to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to
+the following conditions:
+
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
