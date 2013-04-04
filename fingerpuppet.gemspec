@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name              = "fingerpuppet"
-  s.version           = '0.0.1'
+  s.version           = '0.0.2'
   s.date              = "2013-03-28"
   s.summary           = "A simple library and tool to interact with Puppet's REST API without needing Puppet itself installed."
   s.homepage          = "http://github.com/binford2k/fingerpuppet"
@@ -13,6 +13,12 @@ Gem::Specification.new do |s|
   s.files            += Dir.glob("lib/**/*")
   s.files            += Dir.glob("bin/**/*")
   s.description       = <<-desc
-  A simple library and tool to interact with Puppet's REST API without needing Puppet itself installed.
+`fingerpuppet` is a simple library and commandline tool to interact with Puppet's REST API
+without needing to have Puppet itself installed. This may be integrated, for example,
+into a provisioning tool to allow your provisioning process to remotely sign certificates
+of newly built systems. Alternatively, you could use it to request known facts about
+a node from your Puppet Master, or even to request a catalog for a node to, for example,
+perform acceptance testing against a new version of Puppet before upgrading your
+production master.
   desc
 end
