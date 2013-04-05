@@ -33,6 +33,20 @@ class fingerpuppet::auth_conf($privileged_hosts) {
       order      => 019,
     }
 
+    auth_conf::acl { 'provisioner_resource':
+      path       => '/resource',
+      acl_method => ['find'],
+      allow      => $privileged_hosts,
+      order      => 055,
+    }
+
+    auth_conf::acl { 'provisioner_status':
+      path       => '/status',
+      acl_method => ['find'],
+      allow      => $privileged_hosts,
+      order      => 055,
+    }
+
     auth_conf::acl { 'provisioner_certificate_status':
       path       => '/certificate_status',
       auth       => 'yes',

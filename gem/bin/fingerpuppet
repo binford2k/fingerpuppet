@@ -130,7 +130,7 @@ optparse = OptionParser.new { |opts|
         options[:action] = 'certificate_revocation_list'
     end
 
-    opts.on("--sign [CERTNAME]", "Instruct the Puppetmaster to sign a certificate. Requires significate privileges in auth.conf.") do |certname|
+    opts.on("--sign [CERTNAME]", "Instruct the Puppetmaster to sign a certificate. Requires significant privileges in auth.conf.") do |certname|
         options[:action] = 'sign'
         options[:certname] ||= certname
     end

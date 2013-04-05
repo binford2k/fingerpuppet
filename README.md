@@ -61,6 +61,16 @@ An example `auth.conf` might look something like:
     path  /file
     auth yes
     allow *
+
+    path  /resource
+    method find
+    auth any
+    allow provisioner.example.com
+    
+    path  /status
+    method find
+    auth any
+    allow provisioner.example.com
     
     path  /certificate/ca
     method find
