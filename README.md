@@ -36,14 +36,64 @@ Steps for using the API with fingerpuppet:
 Your Puppetmaster must be configured to allow requests other than certificate requests.
 See [http://docs.puppetlabs.com/guides/rest_auth_conf.html](http://docs.puppetlabs.com/guides/rest_auth_conf.html) for more information.
 
-For example, you could add the stanza below as one of the first rules in `auth.conf` to
-allow a single authenticated provisioning system complete access to all endpoints.
+An example `auth.conf` might look something like:
 
-    # Allow the provisioner unfettered access to any endpoint
-    path /
+    path ~ ^/catalog/([^/]+)$
+    method find
     auth yes
-    allow provision.mycompany.com
-
+    allow $1, provisioner.example.com
+    
+    path ~ ^/node/([^/]+)$
+    method find
+    auth yes
+    allow $1, provisioner.example.com
+    
+    path  /certificate_revocation_list/ca
+    method find
+    auth yes
+    allow *
+    
+    path  /report
+    method save
+    auth yes
+    allow *
+    
+    path  /file
+    auth yes
+    allow *
+    
+    path  /certificate/ca
+    method find
+    auth any
+    allow *
+    
+    path  /certificate/
+    method find
+    auth any
+    allow *
+    
+    path  /certificate_request
+    method find, save
+    auth any
+    allow *
+    
+    path  /certificate_status
+    method find, search, save, destroy
+    auth yes
+    allow pe-internal-dashboard, provisioner.example.com
+    
+    path  /facts
+    method find, search
+    auth any
+    allow *
+    
+    path  /facts
+    method save
+    auth yes
+    allow master.puppetlabs.vm, provisioner.example.com
+    
+    path  /
+    auth any
 
 The certname can be specified with `--certname` or with optional `CERTNAME` argument to many options.
 

@@ -1,0 +1,82 @@
+name 'binford2k-fingerpuppet'
+version '0.0.1'
+summary "A simple library and commandline tool to interact with Puppet's REST API without needing to have Puppet itself installed."
+description "`fingerpuppet` is a simple library and commandline tool to interact with Puppet's REST API
+without needing to have Puppet itself installed. This may be integrated, for example,
+into a provisioning tool to allow your provisioning process to remotely sign certificates
+of newly built systems. Alternatively, you could use it to request known facts about
+a node from your Puppet Master, or even to request a catalog for a node to, for example,
+perform acceptance testing against a new version of Puppet before upgrading your
+production master.
+
+Most of these operations will require significant modifications to the Puppet Master's `auth.conf` file.
+Included in this module is a class that will perform these modifications automatically on a Puppet Enterprise
+master, where this file is managed. You must make these modifications yourself on a POSS master.
+
+Using that class would look something like the following. Note that the `privileged_hosts` parameter can accept
+either a simple string or an array of certnames.
+
+    class { 'fingerpuppet::auth_conf':
+      privileged_hosts => 'provisioner.example.com',
+    }
+
+An example `auth.conf` might look something like:
+
+    path ~ ^/catalog/([^/]+)$
+    method find
+    auth yes
+    allow $1, provisioner.example.com
+    
+    path ~ ^/node/([^/]+)$
+    method find
+    auth yes
+    allow $1, provisioner.example.com
+    
+    path  /certificate_revocation_list/ca
+    method find
+    auth yes
+    allow *
+    
+    path  /report
+    method save
+    auth yes
+    allow *
+    
+    path  /file
+    auth yes
+    allow *
+    
+    path  /certificate/ca
+    method find
+    auth any
+    allow *
+    
+    path  /certificate/
+    method find
+    auth any
+    allow *
+    
+    path  /certificate_request
+    method find, save
+    auth any
+    allow *
+    
+    path  /certificate_status
+    method find, search, save, destroy
+    auth yes
+    allow pe-internal-dashboard, provisioner.example.com
+    
+    path  /facts
+    method find, search
+    auth any
+    allow *
+    
+    path  /facts
+    method save
+    auth yes
+    allow master.puppetlabs.vm, provisioner.example.com
+    
+    path  /
+    auth any
+"
+project_page 'https://github.com/binford2k/fingerpuppet'
