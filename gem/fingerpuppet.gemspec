@@ -1,7 +1,7 @@
 Gem::Specification.new do |s|
   s.name              = "fingerpuppet"
-  s.version           = '0.0.3'
-  s.date              = "2013-04-05"
+  s.version           = '0.0.4'
+  s.date              = "2014-05-09"
   s.summary           = "A simple library and tool to interact with Puppet's REST API without needing Puppet itself installed."
   s.homepage          = "http://github.com/binford2k/fingerpuppet"
   s.email             = "binford2k@gmail.com"

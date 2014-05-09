@@ -1,0 +1,16 @@
+v0.0.4
+  * Corrected a problem with the `PUT` method sending an Accept: header
+    incorrectly. Puppet has gotten more correct in its validation.
+  * This allows fingerpuppet to properly submit a CRS again.
+
+v0.0.3
+  * Add more documentation
+  * Properly authenticate the sign request
+  * Release a Puppet module to manage auth.conf and fingerpuppet.
+    (This is a giant hack and should never be used.)
+
+v0.0.2
+  * Released gem
+
+v0.0.1
+  * Initial release
