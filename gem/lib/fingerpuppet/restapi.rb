@@ -83,14 +83,15 @@ module Fingerpuppet
 
               when 'DELETE'
                   request = Net::HTTP::Delete.new(uri)
+                  request["Accept"] = opts[:type]
               when 'HEAD'
                   request = Net::HTTP::Head.new(uri)
+                  request["Accept"] = opts[:type]
               else
                   # default to a GET request
                   request = Net::HTTP::Get.new(uri)
+                  request["Accept"] = opts[:type]
           end
-
-          request["Accept"] = opts[:type]
 
           if @debug
               puts '------ HTTP Request ------'
